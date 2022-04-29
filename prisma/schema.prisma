@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Pessoa {
+  cod_p             Int                @id @default(autoincrement())
+  cpf               String             @db.VarChar(14)
+  nome              String             @db.VarChar(64)
+  cliente           Cliente?
+  funcionario       Funcionario?
+  emprestimo        Emprestimo?
+  funcionarioFuncao FuncionarioFuncao?
+  telefone Telefone[]
+
+  @@map("pessoa")
+}
+
+model Cliente {
+  cod_p  Int    @id
+  pessoa Pessoa @relation(fields: [cod_p], references: [cod_p])
+
+  @@map("cliente")
+}
+
+model Funcionario {
+  cod_p         Int    @id
+  email_contato String @db.VarChar(64)
+  pessoa        Pessoa @relation(fields: [cod_p], references: [cod_p])
+
+  @@map("funcionario")
+}
+
+model Emprestimo {
+  cod_emp        Int       @id @default(autoincrement())
+  data           DateTime  @default(now())
+  taxa_juros     Float
+  data_devolucao DateTime?
+  data_limite    DateTime
+  cod_p          Int       @unique
+  pessoa         Pessoa    @relation(fields: [cod_p], references: [cod_p])
+  cod_l          Int       @unique
+  livro          Livro     @relation(fields: [cod_l], references: [cod_l])
+
+  @@map("emprestimo")
+}
+
+model Funcao {
+  cod_f             Int                @id @default(autoincrement())
+  carga_horaria     Int
+  salario_base      Float
+  descricao         String             @db.VarChar(255)
+  funcionarioFuncao FuncionarioFuncao?
+
+  @@map("funcao")
+}
+
+model FuncionarioFuncao {
+  cod_p       Int    @unique
+  pessoa      Pessoa @relation(fields: [cod_p], references: [cod_p])
+  cod_f       Int    @unique
+  funcao      Funcao @relation(fields: [cod_f], references: [cod_f])
+  ano         String @db.Char(4)
+  bonificacao Float
+
+  @@id([cod_p, cod_f])
+  @@map("funcionario_funcao")
+}
+
+model Livro {
+  cod_l       Int         @id @default(autoincrement())
+  nome        String      @db.VarChar(64)
+  num_paginas Int
+  emprestimo  Emprestimo?
+
+  @@map("livro")
+}
+
+model Telefone {
+  cod_t   Int     @id @default(autoincrement())
+  cod_p   Int
+  pessoa Pessoa @relation(fields: [cod_p], references: [cod_p])
+  numero  String  @db.VarChar(11)
+
+  @@map("telefone")
+}
